@@ -70,10 +70,6 @@ func (s *Solver) term() float64 {
 	return number
 }
 
-func ang2rad(n float64) float64 {
-	return n * 3.14 / 180.0
-}
-
 func perform_function(name string, arg float64) float64 {
 	switch name {
 	case "sin":
@@ -105,37 +101,29 @@ func (s *Solver) number() float64 {
 		s.accept(")")
 		return expr * negator
 	} else {
-		// expect function name
-		fun_names := []string{"sin", "cos"}
-		fun_name := ""
 
-		for _, name := range fun_names {
-			if s.peek() == name {
-				fun_name = name
-				s.consume()
-				break
+		fun, found := findFunction(s.peek())
+		if found {
+			s.consume()
+
+			if !s.accept("(") {
+				fmt.Println("( expected after function name")
+				return 0
 			}
-		}
 
-		if fun_name == "" {
+			// parse argument which is just an expression
+			arg := s.expr()
+
+			if !s.accept(")") {
+				fmt.Println(") expected after function args")
+				return 0
+			}
+
+			return fun(arg)
+		} else {
 			fmt.Println("Unexpected function token:", s.peek())
 			return 0
 		}
-
-		if !s.accept("(") {
-			fmt.Println("( expected after function name")
-			return 0
-		}
-
-		// parse argument which is just an expression
-		arg := s.expr()
-
-		if !s.accept(")") {
-			fmt.Println(") expected after function args")
-			return 0
-		}
-
-		return perform_function(fun_name, arg)
 	}
 
 	return 0
